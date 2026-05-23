@@ -34,6 +34,22 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.2f;
     [SerializeField] private LayerMask groundLayer;
 
+    /// <summary>
+    /// Layer del terreno usato dal ground check. Aggiornato runtime dal SideManager
+    /// quando cambia il lato attivo: il player "sta" solo sui collider del lato visibile.
+    /// </summary>
+    public LayerMask GroundLayer
+    {
+        get => groundLayer;
+        set => groundLayer = value;
+    }
+
+    /// <summary>
+    /// Quando true, l'input di movimento e salto viene ignorato.
+    /// Usato dal FlipController durante l'animazione di transizione (Step 4).
+    /// </summary>
+    public bool MovementLocked { get; set; }
+
     private Rigidbody2D rb;
     private float horizontalInput;
     private bool isGrounded;
@@ -53,6 +69,16 @@ public class PlayerMovement : MonoBehaviour
     {
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
+
+        // Durante il flip ignoriamo input. La fisica (gravità, velocità) la gestisce FlipController.
+        if (MovementLocked)
+        {
+            horizontalInput = 0f;
+            jumpHeld = false;
+            jumpBufferTimer = 0f;
+            isJumping = false;
+            return;
+        }
 
         horizontalInput = 0f;
         if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed)
